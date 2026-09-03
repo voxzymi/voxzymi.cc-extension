@@ -2043,38 +2043,6 @@
     
     </nav>
 
-    <div id="loadingOverlay">
-      <div class="ring-wrap">
-        <canvas id="ringCanvas" width="88" height="88" style="position:absolute;inset:0;border-radius:50%"></canvas>
-        <div class="ring-center">
-          <div class="ring-pct" id="loadPct">0%</div>
-          <div class="ring-label" id="loadRingLabel">PREP</div>
-        </div>
-      </div>
-      <div class="load-phase" id="loadPhase">INITIALIZING</div>
-      <div class="load-sub" id="loadSub">Starting up...</div>
-      <div class="time-row">
-        <div class="time-box">
-          <div class="time-val" id="loadETA">—</div>
-          <div class="time-key">REMAINING</div>
-        </div>
-      </div>
-      <div class="load-bar-wrap">
-        <div class="load-bar" id="loadBar"></div>
-      </div>
-    </div>
-
-    <div id="warningOverlay">
-      <div class="warning-dialog">
-        <h3>⚠ Potential account risk</h3>
-        <p id="warningDetails">This video has high risk settings. Proceed anyway?</p>
-        <div class="warning-actions">
-          <button class="cancel" id="warningCancelBtn" type="button">Cancel</button>
-          <button class="confirm" id="warningProceedBtn" type="button">Proceed</button>
-        </div>
-      </div>
-    </div>
-
     <input type="file" id="bypassFileInput" accept="video/mp4,video/quicktime" style="display:none" />
 
   </div>

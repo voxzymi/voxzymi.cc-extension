@@ -13,39 +13,14 @@ function applyTheme(theme) {
   const stored = (() => {
     try { return localStorage.getItem(THEME_KEY); } catch { return null; }
   })();
-  let current = stored === "light" ? "light" : "dark";
-  applyTheme(current);
-  const btn = document.getElementById("themeBtn");
-  if (btn) {
-    btn.addEventListener("click", () => {
-      current = current === "light" ? "dark" : "light";
-      applyTheme(current);
-      try { localStorage.setItem(THEME_KEY, current); } catch {}
-    });
-  }
+  applyTheme(stored === "light" ? "light" : "dark");
 })();
 
 const uploadZone = $("uploadZone");
 const uploadTextEl = $("uploadText");
 const fileInput = $("bypassFileInput");
-const startBtn = $("startBypassBtn");
 const uploadLocked = $("uploadLocked");
 const uploadActive = $("uploadActive");
-
-const loadingOverlay = $("loadingOverlay");
-const loadPct = $("loadPct");
-const loadRingLabel = $("loadRingLabel");
-const loadPhase = $("loadPhase");
-const loadSub = $("loadSub");
-const loadETA = $("loadETA");
-const loadBar = $("loadBar");
-const ringCanvas = $("ringCanvas");
-const ringCtx = ringCanvas.getContext("2d");
-
-const warningOverlay = $("warningOverlay");
-const warningDetails = $("warningDetails");
-const warningProceedBtn = $("warningProceedBtn");
-const warningCancelBtn = $("warningCancelBtn");
 
 const toggle2 = $("topazToggle");
 const injectToggle = $("injectToggle");
@@ -80,21 +55,12 @@ let selectedFile = null;
 let isProcessing = false;
 let videoWidth = 0, videoHeight = 0;
 let videoMetadata = { duration: 0, fps: 0 };
-let warningState = {
-  required: false,
-  size: false,
-  resolution: false,
-  fps: false,
-  message: null,
-  canProceed: false,
-};
-let loadStartTime = 0, loadTimerInterval = null, currentPct = 0;
 let topazSettings;
 
 const navBtns = document.querySelectorAll(".nav-btn");
 const tabPanels = document.querySelectorAll(".tab-panel");
 
-const TAB_ORDER = ["dl", "settings", "home", "tools", "profile"];
+const TAB_ORDER = ["settings", "home", "tools"];
 let currentTabId = "home";
 let isAnimating = false;
 
@@ -239,91 +205,6 @@ function setUploadZoneVisibility(enabled) {
   }
 }
 
-function showOverlay(phaseLabel) {
-  currentPct = 0;
-  loadStartTime = Date.now();
-  loadingOverlay.classList.remove("hiding");
-  loadingOverlay.classList.add("show");
-  setPhase(1, phaseLabel || "INITIALIZING", "");
-  updateRing(0);
-  loadBar.style.width = "0%";
-  loadPct.textContent = "0%";
-  loadETA.textContent = "—";
-  clearInterval(loadTimerInterval);
-}
-
-function hideOverlay() {
-  loadingOverlay.classList.add("hiding");
-  clearInterval(loadTimerInterval);
-  setTimeout(() => {
-    loadingOverlay.classList.remove("show", "hiding");
-  }, 320);
-}
-
-function showWarning(message) {
-  warningDetails.textContent = message;
-  warningOverlay.classList.remove("hiding");
-  warningOverlay.classList.add("visible");
-}
-
-function hideWarning() {
-  warningOverlay.classList.add("hiding");
-  setTimeout(() => {
-    warningOverlay.classList.remove("visible", "hiding");
-  }, 280);
-}
-
-function setWarningState(file, width, height, fps) {
-  const size = file.size > 40 * 1024 * 1024;
-  const resolution = Math.min(width, height) > 2160;
-  const frameRate = typeof fps === "number" && fps > 120;
-  const messages = [];
-  if (size) messages.push("File size is over 40MB");
-  if (resolution) messages.push("Resolution is higher than 2K");
-  if (frameRate) messages.push("FPS is higher than 120");
-  warningState.size = size;
-  warningState.resolution = resolution;
-  warningState.fps = frameRate;
-  warningState.required = size || resolution || frameRate;
-  warningState.message = warningState.required
-    ? messages.join(". ") + ". Your account may be at risk. Do you want to proceed?"
-    : null;
-  warningState.canProceed = false;
-}
-
-function setProgress(pct, sub) {
-  currentPct = Math.min(pct, 100);
-  updateRing(currentPct);
-  loadBar.style.width = currentPct + "%";
-  loadPct.textContent = Math.round(currentPct) + "%";
-  if (sub) loadSub.textContent = sub;
-}
-
-function setPhase(phase, label, sub) {
-  loadPhase.textContent = label;
-  if (sub !== undefined) loadSub.textContent = sub;
-  loadRingLabel.textContent = ["", "CLOUD", "PATCH", "INJECT"][phase] || "";
-}
-
-function updateRing(pct) {
-  const cx = 44, cy = 44, r = 38;
-  ringCtx.clearRect(0, 0, 88, 88);
-  ringCtx.beginPath();
-  ringCtx.arc(cx, cy, r, 0, Math.PI * 2);
-  ringCtx.strokeStyle = "rgba(255,255,255,0.06)";
-  ringCtx.lineWidth = 4;
-  ringCtx.stroke();
-  if (pct > 0) {
-    const s = -Math.PI / 2;
-    const e = s + (pct / 100) * Math.PI * 2;
-    ringCtx.beginPath();
-    ringCtx.arc(cx, cy, r, s, e);
-    ringCtx.strokeStyle = "#ffffff";
-    ringCtx.lineWidth = 4;
-    ringCtx.lineCap = "round";
-    ringCtx.stroke();
-  }
-}
 
 async function initMediaInfo() {
   const factory =
@@ -462,27 +343,6 @@ async function extractRealFPS(file) {
   });
 }
 
-function bufferToDataURL(arrayBuffer) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.readAsDataURL(new Blob([arrayBuffer], { type: "video/mp4" }));
-  });
-}
-
-function scrubMetadataString(buffer, searchString) {
-  const u8 = new Uint8Array(buffer);
-  const searchBytes = new TextEncoder().encode(searchString);
-  for (let i = 0; i < u8.length - searchBytes.length; i++) {
-    let match = true;
-    for (let j = 0; j < searchBytes.length; j++) {
-      if (u8[i + j] !== searchBytes[j]) { match = false; break; }
-    }
-    if (match) for (let j = 0; j < searchBytes.length; j++) u8[i + j] = 0x00;
-  }
-  return buffer;
-}
-
 uploadZone.addEventListener("click", () => {
   if (!isProcessing) fileInput.click();
 });
@@ -528,22 +388,6 @@ fileInput.addEventListener("change", async (e) => {
     $("t-size").textContent = `${sizeMB}MB`;
     $("t-size").classList.remove("empty");
 
-    setWarningState(file, videoWidth, videoHeight, fps);
-    if (startBtn) {
-      startBtn.disabled = false;
-      startBtn.classList.add("ready");
-
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const isTikTokStudio = tabs[0]?.url?.includes("tiktok.com/tiktokstudio/upload");
-        if (isTikTokStudio) {
-          startBtn.textContent = "Post it!";
-          startBtn.dataset.action = "post";
-        } else {
-          startBtn.textContent = "Go to TikTok Studio";
-          startBtn.dataset.action = "redirect";
-        }
-      });
-    }
   };
 
   video.src = URL.createObjectURL(file);
@@ -583,171 +427,7 @@ fileInput.addEventListener("change", async (e) => {
   } catch (_) {}
 });
 
-if (startBtn)
-  startBtn.addEventListener("click", async () => {
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    const isTikTokStudio = tab?.url?.includes("tiktok.com/tiktokstudio");
-
-    if (warningState.required && !warningState.canProceed && isTikTokStudio) {
-      showWarning(warningState.message);
-      return;
-    }
-    if (!isTikTokStudio || startBtn.dataset.action === "redirect") {
-      window.open("https://www.tiktok.com/tiktokstudio/upload", "_blank");
-      startBtn.dataset.action = "post";
-      return;
-    }
-
-    let topaz = false;
-    chrome.storage.local.get("MetaDataEnabled", (data) => {
-      topaz = data.MetaDataEnabled;
-    });
-
-    if (!selectedFile || isProcessing) return;
-    isProcessing = true;
-    if (startBtn) {
-      startBtn.disabled = true;
-      startBtn.classList.remove("ready");
-    }
-    uploadZone.classList.add("processing");
-    uploadZone.classList.remove("has-file");
-    showOverlay("PATCH");
-
-    try {
-      let buffer = await selectedFile.arrayBuffer();
-      setPhase(1, "BYPASS PAYLOAD", "Applying elst and tkhd values…");
-      setProgress(70, "Payload ready");
-
-      let topazString = null;
-      try { topazString = await extractTopazMetadata(selectedFile); } catch (_) {}
-      if (topazString && topaz) buffer = scrubMetadataString(buffer, topazString);
-
-      setPhase(2, "BINARY PATCH", "Writing elst payload…");
-      setProgress(84, "Patching…");
-
-      const dv = new DataView(buffer);
-      const u8 = new Uint8Array(buffer);
-      const MOOV = [0x6d, 0x6f, 0x6f, 0x76];
-      const TRAK = [0x74, 0x72, 0x61, 0x6b];
-      const HDLR = [0x68, 0x64, 0x6c, 0x72];
-      const VIDE = [0x76, 0x69, 0x64, 0x65];
-      const TKHD = [0x74, 0x6b, 0x68, 0x64];
-
-      function findBox(data, boxType, start = 0) {
-        for (let i = start; i <= data.length - 4; i++) {
-          if (data[i] === boxType[0] && data[i + 1] === boxType[1] &&
-              data[i + 2] === boxType[2] && data[i + 3] === boxType[3]) return i;
-        }
-        return -1;
-      }
-
-      const moov = findBox(u8, MOOV);
-      if (moov === -1) throw new Error("Not a valid MP4 (no moov box)");
-
-      let pos = moov, isPatched = false;
-      while (true) {
-        const trak = findBox(u8, TRAK, pos);
-        if (trak === -1) break;
-        const next_trak = findBox(u8, TRAK, trak + 4);
-        const end = next_trak !== -1 ? next_trak : u8.length;
-        const hdlr = findBox(u8, HDLR, trak);
-        if (hdlr !== -1 && hdlr < end) {
-          if (u8[hdlr + 12] === VIDE[0] && u8[hdlr + 13] === VIDE[1] &&
-              u8[hdlr + 14] === VIDE[2] && u8[hdlr + 15] === VIDE[3]) {
-            const tkhdPos = findBox(u8, TKHD, trak);
-            if (tkhdPos !== -1 && tkhdPos < end && u8[tkhdPos + 4] === 0) {
-              dv.setUint32(tkhdPos + 48, 1, false);
-              isPatched = true;
-            }
-            break;
-          }
-        }
-        pos = trak + 4;
-      }
-
-      if (!isPatched) throw new Error("Couldn't patch — container layout not recognised");
-
-      setPhase(3, "INJECTING", "Encoding data for transfer…");
-      setProgress(90, "ENCODING DATA…");
-
-      const base64Data = await bufferToDataURL(buffer);
-      const fileName = selectedFile.name.replace(/\.[^/.]+$/, "") + " - voxzymi.cc.mp4";
-
-      setProgress(93, "FINDING TIKTOK TAB…");
-
-      const tikTokTabs = await chrome.tabs.query({ url: "*://*.tiktok.com/*" });
-      let targetTabId = null;
-
-      if (tikTokTabs.length > 0) {
-        const uploadTab = tikTokTabs.find(
-          (t) => t.url && (t.url.includes("/upload") || t.url.includes("/studio")),
-        );
-        targetTabId = (uploadTab || tikTokTabs[0]).id;
-      } else {
-        const newTab = await chrome.tabs.create({
-          url: "https://www.tiktok.com/upload",
-          active: false,
-        });
-        targetTabId = newTab.id;
-        await new Promise((resolve) => {
-          chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
-            if (tabId === newTab.id && info.status === "complete") {
-              chrome.tabs.onUpdated.removeListener(listener);
-              setTimeout(resolve, 2500);
-            }
-          });
-        });
-      }
-
-      setProgress(96, "UPLOADING TO TIKTOK…");
-      const result = await new Promise((resolve) => {
-        chrome.tabs.sendMessage(
-          targetTabId,
-          { action: "INJECT_VIDEO", dataUrl: base64Data, fileName },
-          (response) => {
-            if (chrome.runtime.lastError) {
-              resolve({ ok: false, error: chrome.runtime.lastError.message });
-            } else {
-              resolve(response || { ok: true });
-            }
-          },
-        );
-      });
-      if (!result?.ok)
-        throw new Error(result?.error || "Injection failed — open tiktok.com/upload first");
-
-      chrome.tabs.update(targetTabId, { active: true });
-      setProgress(100, "DONE!");
-
-      setTimeout(() => {
-        hideOverlay();
-        if (startBtn) startBtn.classList.add("success-mode");
-        if (startBtn) startBtn.textContent = "✓ INJECTED";
-        uploadZone.classList.remove("processing");
-        $("topbarBadge").textContent = "INJECTED";
-        setTimeout(resetUI, 4000);
-      }, 1000);
-    } catch (err) {
-      hideOverlay();
-      if (startBtn) {
-        startBtn.textContent = "RETRY";
-        startBtn.classList.add("ready");
-        startBtn.disabled = false;
-      }
-      uploadZone.classList.remove("processing");
-      uploadZone.classList.add("has-file");
-      isProcessing = false;
-      console.error(err);
-    }
-  });
-
 function resetUI() {
-  if (startBtn) {
-    startBtn.classList.remove("success-mode", "ready");
-    startBtn.textContent = "Post it!";
-    delete startBtn.dataset.action;
-    startBtn.disabled = true;
-  }
   selectedFile = null;
   isProcessing = false;
   fileInput.value = "";
@@ -757,16 +437,7 @@ function resetUI() {
     const el = $(id);
     if (el) { el.textContent = "—"; el.classList.add("empty"); }
   });
-  $("topbarBadge").textContent = "READY";
 }
-
-warningProceedBtn.addEventListener("click", () => {
-  warningState.canProceed = true;
-  hideWarning();
-  if (startBtn) startBtn.click();
-});
-
-warningCancelBtn.addEventListener("click", hideWarning);
 
 function setMethodRowsLocked(masterEnabled) {
   [rowMethod1, rowMethod2, rowTopaz].forEach((row) => {
@@ -832,11 +503,6 @@ injectToggle.addEventListener("change", async () => {
 
   if (!isEnabled) {
     selectedFile = null;
-    if (startBtn) {
-      startBtn.disabled = true;
-      startBtn.classList.remove("ready", "success-mode");
-      startBtn.textContent = "Post it!";
-    }
     uploadZone.classList.remove("has-file", "processing");
     uploadTextEl.textContent = "SELECT FILE";
     ["t-res", "t-fps", "t-bitrate", "t-size"].forEach((id) => {
@@ -1058,67 +724,3 @@ exportTopazBtn.addEventListener("click", (e) => {
   a.click();
 });
 
-const dlInput = $("dlInput");
-const dlBtn = $("dlBtn");
-
-if (dlInput && dlBtn) {
-  dlInput.addEventListener("input", () => {
-    const v = dlInput.value.trim();
-    dlBtn.classList.toggle("ready", v.includes("tiktok.com"));
-  });
-}
-
-async function doPopupDownload(videoUrl) {
-  const submitRes = await fetch("https://www.tikwm.com/api/video/task/submit", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      Accept: "application/json",
-    },
-    body: new URLSearchParams({ url: videoUrl, web: 1 }),
-  });
-  if (!submitRes.ok) throw new Error(`Submit failed (${submitRes.status})`);
-  const submitData = await submitRes.json();
-  if (submitData.code !== 0 || !submitData.data?.task_id)
-    throw new Error("API error: " + (submitData.msg || "no task ID returned"));
-
-  const taskId = submitData.data.task_id;
-  let downloadUrl = null;
-  for (let i = 0; i < 12; i++) {
-    await new Promise((r) => setTimeout(r, 1500));
-    dlBtn.textContent = `Polling… (${i + 1}/12)`;
-    const resultRes = await fetch(
-      `https://www.tikwm.com/api/video/task/result?task_id=${taskId}`,
-      { headers: { Accept: "application/json" } },
-    );
-    const resultData = await resultRes.json();
-    if (resultData.code === 0 && resultData.data?.status === 2) {
-      downloadUrl = resultData.data.detail.download_url;
-      break;
-    }
-  }
-  if (!downloadUrl) throw new Error("Timed out — download URL not ready");
-
-  chrome.downloads.download({ url: downloadUrl });
-}
-
-if (dlBtn && dlInput) {
-  dlBtn.addEventListener("click", async () => {
-    const url = dlInput.value.trim();
-    if (!url.includes("tiktok.com")) return;
-    dlBtn.textContent = "Submitting…";
-    dlBtn.classList.remove("ready");
-    try {
-      await doPopupDownload(url);
-      dlBtn.textContent = "Download started ✓";
-      setTimeout(() => {
-        dlBtn.textContent = "Paste & Download";
-        dlBtn.classList.toggle("ready", dlInput.value.trim().includes("tiktok.com"));
-      }, 3000);
-    } catch (err) {
-      dlBtn.textContent = "Error — Retry";
-      dlBtn.classList.add("ready");
-      setTimeout(() => { dlBtn.textContent = "Paste & Download"; }, 3000);
-    }
-  });
-}

@@ -142,19 +142,6 @@ chrome.storage.onChanged.addListener((changes) => {
   }
 });
 
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg?.action === "INJECT_VIDEO") {
-    const detail = { base64Data: msg.dataUrl, fileName: msg.fileName };
-    const onResult = (ev) => {
-      try { sendResponse(ev.detail || { ok: true }); } catch (e) {}
-      window.removeEventListener("inject:result", onResult);
-    };
-    window.addEventListener("inject:result", onResult);
-    document.dispatchEvent(new CustomEvent("inject-video", { detail }));
-    return true;
-  }
-});
-
 function ensureBadgeStyles() {
   if (document.getElementById("vox-badge-styles")) return;
   const style = document.createElement("style");

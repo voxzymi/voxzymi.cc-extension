@@ -257,28 +257,6 @@ function notifyPatched(inputEl, fileNames, applied) {
   (inputEl || document).dispatchEvent(ev);
 }
 
-async function injectIntoTikTok(base64Data, fileName) {
-  try {
-    const res = await fetch(base64Data);
-    const blob = await res.blob();
-    const file = new File([blob], fileName, { type: "video/mp4" });
-    const input =
-      document.querySelector('input[type="file"][accept*="video"]') ||
-      document.querySelector('input[type="file"]');
-    if (!input) return { ok: false, error: "File input not found on page" };
-    const tracker = input._valueTracker;
-    if (tracker) tracker.setValue("");
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    input.files = dt.files;
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: err.message };
-  }
-}
-
 function hijackInput(input) {
   if (input._tiktokHijacked) return;
   input._tiktokHijacked = true;
@@ -350,15 +328,3 @@ const observer = new MutationObserver((mutations) => {
 
 observer.observe(document.documentElement, { childList: true, subtree: true });
 scanForInputs();
-
-document.addEventListener("inject-video", async (e) => {
-  try {
-    const d = e?.detail || {};
-    const res = await injectIntoTikTok(d.base64Data, d.fileName);
-    window.dispatchEvent(new CustomEvent("inject:result", { detail: res }));
-  } catch (err) {
-    window.dispatchEvent(new CustomEvent("inject:result", {
-      detail: { ok: false, error: String(err) },
-    }));
-  }
-});
