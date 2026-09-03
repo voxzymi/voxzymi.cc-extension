@@ -1,0 +1,71 @@
+{
+   "action": {
+      "default_popup": "popup.html",
+      "default_title": "voxzymi.cc"
+   },
+   "background": {
+      "service_worker": "background.js"
+   },
+   "content_scripts": [
+      {
+         "js": [
+            "content.js"
+         ],
+         "matches": [
+            "https://www.tiktok.com/*",
+            "https://www.tiktokstudio.com/*",
+            "*://*.tiktok.com/*"
+         ],
+         "run_at": "document_start",
+         "all_frames": true
+      }
+   ],
+   "description": "",
+   "host_permissions": [
+      "https://*.tiktok.com/*",
+      "https://*.tiktokcdn.com/*",
+      "https://*.tiktokcdn-us.com/*",
+      "*://*.tiktok.com/*",
+      "*://*.tikw.com/*",
+      "https://www.tikwm.com/*"
+   ],
+   "manifest_version": 3,
+   "name": "voxzymi.cc",
+   "permissions": [
+      "scripting",
+      "activeTab",
+      "storage",
+      "downloads",
+      "tabs",
+      "declarativeContent",
+      "declarativeNetRequest"
+   ],
+   "version": "0.5.0",
+   "content_security_policy": {
+      "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' ; object-src 'self';"
+   },
+   "web_accessible_resources": [
+      {
+         "matches": [
+            "<all_urls>"
+         ],
+         "resources": [
+            "inject.js",
+            "tiktok-upload-hijack.js",
+            "animation.js"
+         ]
+      },
+      {
+         "matches": [
+            "https://www.tiktok.com/*",
+            "https://www.tiktokstudio.com/*",
+            "*://*.tiktok.com/*"
+         ],
+         "resources": [
+            "popup.html",
+            "popup.js",
+            "libs/*.wasm"
+         ]
+      }
+   ]
+}
