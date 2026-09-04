@@ -305,6 +305,27 @@
     transform: none;
   }
 
+  @keyframes toggle-row-reject {
+    0%   { transform: translateX(0); }
+    15%  { transform: translateX(-7px); }
+    30%  { transform: translateX(6px); }
+    45%  { transform: translateX(-5px); }
+    60%  { transform: translateX(4px); }
+    75%  { transform: translateX(-2px); }
+    100% { transform: translateX(0); }
+  }
+
+  .toggle-row.row-reject {
+    animation: toggle-row-reject 0.42s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    border-color: rgba(255, 45, 85, 0.85) !important;
+    background:
+      linear-gradient(180deg, rgba(90, 20, 32, 0.85) 0%, rgba(60, 12, 22, 0.75) 100%) !important;
+    box-shadow:
+      0 0 0 0.5px rgba(255, 45, 85, 0.55) inset,
+      0 0 22px rgba(255, 45, 85, 0.35),
+      0 10px 32px rgba(0, 0, 0, 0.5) !important;
+  }
+
   .method-note {
     font-size: 10px;
     color: var(--muted);
@@ -1748,6 +1769,26 @@
           </label>
         </div>
 
+        <div class="toggle-row" id="rowDownloader">
+          <div class="toggle-row-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M12 3v13" />
+              <path d="M7 11l5 5 5-5" />
+              <path d="M4 21h16" />
+            </svg>
+          </div>
+          <div class="toggle-row-body">
+            <div class="toggle-row-title">Video Downloader</div>
+            <div class="toggle-row-sub">Adds a download button on every TikTok video</div>
+          </div>
+          <label class="tog">
+            <input type="checkbox" id="downloaderToggle" />
+            <div class="tog-track"></div>
+            <div class="tog-thumb"></div>
+          </label>
+        </div>
+
         <div class="toggle-row" id="rowChecker">
           <div class="toggle-row-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -1806,6 +1847,24 @@
           </div>
           <label class="tog">
             <input type="checkbox" id="method2Toggle" disabled />
+            <div class="tog-track"></div>
+            <div class="tog-thumb"></div>
+          </label>
+        </div>
+
+        <div class="toggle-row row-locked" id="rowMethod3">
+          <div class="toggle-row-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <polygon points="12 2 15 9 22 9 17 14 19 22 12 18 5 22 7 14 2 9 9 9 12 2" />
+            </svg>
+          </div>
+          <div class="toggle-row-body">
+            <div class="toggle-row-title">1080p60 Forced</div>
+            <div class="toggle-row-sub">Force video quality on Tiktok</div>
+          </div>
+          <label class="tog">
+            <input type="checkbox" id="method3Toggle" disabled />
             <div class="tog-track"></div>
             <div class="tog-thumb"></div>
           </label>

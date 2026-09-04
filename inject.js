@@ -172,6 +172,10 @@
       (url.includes("project/post") || url.includes("/publish") || url.includes("/post/publish"));
   }
 
+  function bypassOn() {
+    return window.__pageSettings?.injectEnabled !== false;
+  }
+
   const _origCreateObjectURL = URL.createObjectURL.bind(URL);
   const dummyVideoURL = _origCreateObjectURL(
     new Blob([new Uint8Array(8)], { type: "application/octet-stream" }),
@@ -179,7 +183,7 @@
 
   Object.defineProperty(URL, "createObjectURL", {
     get: () => (obj) => {
-      const method1On = window.__pageSettings?.method1 === true;
+      const method1On = bypassOn() && window.__pageSettings?.method1 === true;
       const onUploadPage =
         window.location.href.includes("tiktokstudio") ||
         window.location.href.includes("/upload");
@@ -193,7 +197,7 @@
 
   window.fetch = new Proxy(window.fetch, {
     apply(target, thisArg, [url, config = {}, ...rest]) {
-      if (isUploadEndpoint(url) && config?.body) {
+      if (bypassOn() && isUploadEndpoint(url) && config?.body) {
         try {
           const parsed = JSON.parse(config.body);
           config.body = processPayload(parsed);
@@ -212,7 +216,7 @@
   };
 
   XMLHttpRequest.prototype.send = function (body) {
-    if (isUploadEndpoint(this.__Url) && typeof body === "string") {
+    if (bypassOn() && isUploadEndpoint(this.__Url) && typeof body === "string") {
       try {
         const parsed = JSON.parse(body);
         body = processPayload(parsed);
@@ -224,7 +228,8 @@
   const _origStringify = JSON.stringify;
   JSON.stringify = function (value, ...rest) {
     const href = window.location.href;
-    if ((href.includes("tiktokstudio") || href.includes("/upload")) &&
+    if (bypassOn() &&
+        (href.includes("tiktokstudio") || href.includes("/upload")) &&
         value && typeof value === "object") {
       const hasTriggerKeys =
         value.single_post_req_list || value.vedit_common_info || value.post_common_info;

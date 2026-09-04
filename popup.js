@@ -26,8 +26,11 @@ const toggle2 = $("topazToggle");
 const injectToggle = $("injectToggle");
 const method1Toggle = $("method1Toggle");
 const method2Toggle = $("method2Toggle");
+const method3Toggle = $("method3Toggle");
+const downloaderToggle = $("downloaderToggle");
 const rowMethod1 = $("rowMethod1");
 const rowMethod2 = $("rowMethod2");
+const rowMethod3 = $("rowMethod3");
 const rowTopaz = $("rowTopaz");
 
 const topazHeader = $("TopazHeader");
@@ -440,10 +443,10 @@ function resetUI() {
 }
 
 function setMethodRowsLocked(masterEnabled) {
-  [rowMethod1, rowMethod2, rowTopaz].forEach((row) => {
+  [rowMethod1, rowMethod2, rowMethod3, rowTopaz].forEach((row) => {
     if (row) row.classList.toggle("row-locked", !masterEnabled);
   });
-  [method1Toggle, method2Toggle, toggle2].forEach((el) => {
+  [method1Toggle, method2Toggle, method3Toggle, toggle2].forEach((el) => {
     if (el) el.disabled = !masterEnabled;
   });
   syncMethod2Lock();
@@ -471,19 +474,38 @@ toggle2.addEventListener("change", () => {
 });
 
 chrome.storage.local.get(
-  ["injectEnabled", "method1Enabled", "method2Enabled"],
+  ["injectEnabled", "method1Enabled", "method2Enabled", "method3Enabled"],
   (data) => {
     const isEnabled = data.injectEnabled !== false;
     injectToggle.checked = isEnabled;
     setUploadZoneVisibility(isEnabled);
     if (method1Toggle) method1Toggle.checked = data.method1Enabled === true;
     if (method2Toggle) method2Toggle.checked = data.method2Enabled === true;
+    if (method3Toggle) method3Toggle.checked = data.method3Enabled === true;
     setMethodRowsLocked(isEnabled);
   },
 );
 
+function flashReject(row) {
+  if (!row) return;
+  row.classList.remove("row-reject");
+  void row.offsetWidth;
+  row.classList.add("row-reject");
+  row.addEventListener(
+    "animationend",
+    () => row.classList.remove("row-reject"),
+    { once: true },
+  );
+}
+
 if (method1Toggle) {
   method1Toggle.addEventListener("change", () => {
+    if (method1Toggle.checked && method3Toggle?.checked) {
+      method1Toggle.checked = false;
+      flashReject(rowMethod1);
+      flashReject(rowMethod3);
+      return;
+    }
     chrome.storage.local.set({ method1Enabled: method1Toggle.checked });
     syncMethod2Lock();
   });
@@ -492,6 +514,27 @@ if (method1Toggle) {
 if (method2Toggle) {
   method2Toggle.addEventListener("change", () => {
     chrome.storage.local.set({ method2Enabled: method2Toggle.checked });
+  });
+}
+
+if (method3Toggle) {
+  method3Toggle.addEventListener("change", () => {
+    if (method3Toggle.checked && method1Toggle?.checked) {
+      method3Toggle.checked = false;
+      flashReject(rowMethod3);
+      flashReject(rowMethod1);
+      return;
+    }
+    chrome.storage.local.set({ method3Enabled: method3Toggle.checked });
+  });
+}
+
+if (downloaderToggle) {
+  chrome.storage.local.get("downloaderEnabled", (data) => {
+    downloaderToggle.checked = data.downloaderEnabled !== false;
+  });
+  downloaderToggle.addEventListener("change", () => {
+    chrome.storage.local.set({ downloaderEnabled: downloaderToggle.checked });
   });
 }
 
@@ -510,9 +553,6 @@ injectToggle.addEventListener("change", async () => {
       if (el) { el.textContent = "—"; el.classList.add("empty"); }
     });
   }
-
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab?.url?.includes("tiktok.com/tiktokstudio")) chrome.tabs.reload(tab.id);
 });
 
 let topazOpen = false;

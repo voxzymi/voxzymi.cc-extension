@@ -18,6 +18,21 @@
          ],
          "run_at": "document_start",
          "all_frames": true
+      },
+      {
+         "js": [
+            "downloader.js"
+         ],
+         "matches": [
+            "https://www.tiktok.com/*",
+            "*://*.tiktok.com/*"
+         ],
+         "exclude_matches": [
+            "https://www.tiktok.com/tiktokstudio/*",
+            "https://www.tiktokstudio.com/*"
+         ],
+         "run_at": "document_idle",
+         "all_frames": false
       }
    ],
    "description": "",
@@ -40,6 +55,15 @@
       "declarativeContent",
       "declarativeNetRequest"
    ],
+   "declarative_net_request": {
+      "rule_resources": [
+         {
+            "id": "tikwm_headers",
+            "enabled": true,
+            "path": "rules.json"
+         }
+      ]
+   },
    "version": "0.5.0",
    "content_security_policy": {
       "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' ; object-src 'self';"

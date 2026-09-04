@@ -1,0 +1,66 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "Referer", "operation": "set", "value": "https://www.tikwm.com/" },
+        { "header": "Origin", "operation": "remove" },
+        { "header": "User-Agent", "operation": "set", "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" }
+      ]
+    },
+    "condition": {
+      "urlFilter": "||tikwm.com/",
+      "resourceTypes": ["xmlhttprequest", "sub_frame", "other"]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "Referer", "operation": "set", "value": "https://www.tiktok.com/" }
+      ]
+    },
+    "condition": {
+      "requestDomains": [
+        "tiktokcdn.com",
+        "tiktokcdn-us.com",
+        "tiktokcdn-eu.com",
+        "tiktokv.com",
+        "tiktokv.us"
+      ],
+      "resourceTypes": ["xmlhttprequest", "media", "other"]
+    }
+  },
+  {
+    "id": 3,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "Referer", "operation": "set", "value": "https://www.tiktok.com/" }
+      ]
+    },
+    "condition": {
+      "urlFilter": "||v16-webapp-prime.tiktok.com/",
+      "resourceTypes": ["xmlhttprequest", "media", "other"]
+    }
+  },
+  {
+    "id": 4,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "requestHeaders": [
+        { "header": "Referer", "operation": "set", "value": "https://www.tiktok.com/" }
+      ]
+    },
+    "condition": {
+      "urlFilter": "||v19-webapp-prime.tiktok.com/",
+      "resourceTypes": ["xmlhttprequest", "media", "other"]
+    }
+  }
+]
